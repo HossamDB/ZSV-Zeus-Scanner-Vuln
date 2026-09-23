@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zsv-zeus-scanner-vuln"
+version = "0.1.0"
+description = "ZSV (Zeus Scanner Vuln) - a defensive security scanner for authorized static IP / website / web app testing, combining Nmap, Nikto, a custom XSS/header checker, and free NVD CVE lookups into one SQLite-backed HTML report."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Hossam" }
+]
+keywords = [
+    "security", "vulnerability-scanner", "xss", "nmap", "nikto",
+    "cve", "nvd", "defensive-security", "pentest", "infosec"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "Topic :: Security",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "Jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/HossamDB/ZSV-Zeus-Scanner-Vuln"
+Issues = "https://github.com/HossamDB/ZSV-Zeus-Scanner-Vuln/issues"
+Security = "https://github.com/HossamDB/ZSV-Zeus-Scanner-Vuln/blob/main/SECURITY.md"
+
+[project.scripts]
+zsv = "zsv.main:run"
+
+[tool.setuptools.packages.find]
+include = ["zsv*"]
+
+[tool.setuptools.package-data]
+zsv = ["report/templates/*.html"]

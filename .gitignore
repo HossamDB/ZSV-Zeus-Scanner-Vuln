@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# ZSV runtime data - never commit scan results or the local CVE/findings DB
+*.db
+*.sqlite
+*.sqlite3
+zsv_report_*.html
+~/.zsv/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store

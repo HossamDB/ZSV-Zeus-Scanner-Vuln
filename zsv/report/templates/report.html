@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZSV Report - {{ target_host }}</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page-plane:      #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --border:         rgba(11,11,11,0.10);
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-serious:  #ec835a;
+    --status-critical: #d03b3b;
+    --status-info:     #52514e;
+    --series-1:        #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page-plane:      #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --border:         rgba(255,255,255,0.10);
+      --status-good:     #0ca30c;
+      --status-warning:  #fab219;
+      --status-serious:  #ec835a;
+      --status-critical: #e66767;
+      --status-info:     #c3c2b7;
+      --series-1:        #3987e5;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page-plane);
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+  header.report-header {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 14px; margin: 0; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
+  .meta-row strong { color: var(--text-primary); }
+  .disclaimer {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--status-warning);
+    background: var(--page-plane);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    border-radius: 4px;
+  }
+
+  .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px; }
+  @media (max-width: 640px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+  .stat-tile {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: left;
+  }
+  .stat-tile .value { font-size: 26px; font-weight: 600; font-variant-numeric: proportional-nums; }
+  .stat-tile .label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .stat-tile.critical .value { color: var(--status-critical); }
+  .stat-tile.high .value { color: var(--status-serious); }
+  .stat-tile.medium .value { color: var(--status-warning); }
+  .stat-tile.low .value { color: var(--series-1); }
+  .stat-tile.info .value { color: var(--status-info); }
+
+  section { margin-bottom: 28px; }
+  h2 { font-size: 16px; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--gridline); }
+
+  .finding {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .finding-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px; color: #fff;
+  }
+  .badge.critical { background: var(--status-critical); }
+  .badge.high     { background: var(--status-serious); color: #2a1400; }
+  .badge.medium   { background: var(--status-warning); color: #2a1e00; }
+  .badge.low      { background: var(--series-1); }
+  .badge.info     { background: var(--status-info); }
+  .finding-title { font-weight: 600; font-size: 14.5px; }
+  .module-tag { font-size: 11px; color: var(--text-muted); margin-left: auto; text-transform: uppercase; letter-spacing: .03em; }
+  .finding-detail { margin: 10px 0 0; font-size: 13.5px; color: var(--text-secondary); white-space: pre-wrap; }
+  .finding-location { margin-top: 8px; font-size: 12.5px; color: var(--text-muted); font-family: ui-monospace, monospace; word-break: break-all; }
+  .finding-evidence {
+    margin-top: 8px; font-size: 12px; background: var(--page-plane); border: 1px solid var(--gridline);
+    border-radius: 6px; padding: 8px 10px; font-family: ui-monospace, monospace; white-space: pre-wrap; word-break: break-all;
+    color: var(--text-secondary);
+  }
+  .cve-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .cve-item { font-size: 12.5px; border-top: 1px dashed var(--gridline); padding-top: 6px; }
+  .cve-id { font-weight: 600; }
+  .cve-score { color: var(--text-muted); margin-left: 6px; }
+
+  .empty-state { color: var(--text-muted); font-size: 13.5px; padding: 16px; text-align: center; }
+  footer { text-align: center; font-size: 11.5px; color: var(--text-muted); margin-top: 32px; }
+  table.simple { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.simple th, table.simple td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--gridline); }
+  table.simple th { color: var(--text-muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report-header">
+    <h1>ZSV - Zeus Scanner Vuln</h1>
+    <p class="subtitle">Defensive security scan report</p>
+    <div class="meta-row">
+      <span><strong>Target:</strong> {{ target_host }}</span>
+      <span><strong>URL:</strong> {{ target_url }}</span>
+      <span><strong>Scan started:</strong> {{ started_at }}</span>
+      <span><strong>Scan finished:</strong> {{ finished_at }}</span>
+      <span><strong>Modules run:</strong> {{ modules|join(', ') }}</span>
+    </div>
+    <div class="disclaimer">
+      This report was generated by ZSV for authorized, defensive security testing only.
+      Only scan systems you own or have explicit written permission to test.
+    </div>
+  </header>
+
+  <div class="stat-row">
+    {% for sev in ['critical', 'high', 'medium', 'low', 'info'] %}
+    <div class="stat-tile {{ sev }}">
+      <div class="value">{{ severity_counts.get(sev, 0) }}</div>
+      <div class="label">{{ sev|capitalize }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <section>
+    <h2>Findings ({{ findings|length }})</h2>
+    {% if findings %}
+      {% for f in findings %}
+      <div class="finding">
+        <div class="finding-head">
+          <span class="badge {{ f.severity }}">{{ f.severity }}</span>
+          <span class="finding-title">{{ f.title }}</span>
+          <span class="module-tag">{{ f.module }}</span>
+        </div>
+        {% if f.detail %}<p class="finding-detail">{{ f.detail }}</p>{% endif %}
+        {% if f.location %}<div class="finding-location">{{ f.location }}</div>{% endif %}
+        {% if f.evidence %}<div class="finding-evidence">{{ f.evidence }}</div>{% endif %}
+        {% if f.cves %}
+        <div class="cve-list">
+          {% for c in f.cves %}
+          <div class="cve-item">
+            <span class="cve-id">{{ c.cve_id }}</span>
+            {% if c.cvss_v3_score %}<span class="cve-score">CVSS {{ c.cvss_v3_score }} ({{ c.cvss_v3_severity }})</span>{% endif %}
+            <div>{{ c.description }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">No findings recorded for this scan.</div>
+    {% endif %}
+  </section>
+
+  {% if open_ports %}
+  <section>
+    <h2>Open ports / services (Nmap)</h2>
+    <table class="simple">
+      <thead><tr><th>Port</th><th>Protocol</th><th>Service</th><th>Product / Version</th></tr></thead>
+      <tbody>
+        {% for p in open_ports %}
+        <tr><td>{{ p.port }}</td><td>{{ p.protocol }}</td><td>{{ p.service }}</td><td>{{ p.product }} {{ p.version }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <footer>
+    Generated by ZSV (Zeus Scanner Vuln) v{{ zsv_version }} &middot; CVE data from the free NVD (NIST) API &middot;
+    Nmap and Nikto are free, open-source tools shelled out to locally.
+  </footer>
+</div>
+</body>
+</html>
